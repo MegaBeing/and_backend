@@ -1,13 +1,22 @@
-from Flask import flask
+from flask import Flask
+from firebase import firebase
+import os
+from os.path import join, dirname
+from dotenv import load_dotenv
+from openai import OpenAI
+app = Flask(__name__)
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv()
+FIREBASE_URL = os.environ['FIREBASE_URL']
+firebase = firebase.FirebaseApplication(FIREBASE_URL, None)
 
-app = flask(__name__)
 
-@app.route("/auth/<user>",methods = ['GET'])
-def get_user(user):
-    # call to firebase to get user
-    # authenticate the user
-    # pass true/false inside json
-    pass
+# @app.route("/auth/<user>",methods = ['GET'])
+# def get_user(user):
+#     # call to firebase to get user
+#     # authenticate the user
+#     # pass true/false inside json
+#     pass
 
 @app.route("/auth-create/<user>",methods = ['POST'])
 def create_user(user):
@@ -27,15 +36,18 @@ def get_all_section_and_task(user):
         # send empty json
     pass
 
-@app.route("/prompt/<user>/create",method = ['POST'])
-def prompt_gpt(user):
-    # call firebase for user information
-    # openAI api key
-    # generate a prompt using string 
-    # Send request to openAi api
-    # get the request answer
-    # return response as json 
+@app.route("/prompt/")
+def prompt_gpt():
+    client = OpenAI()
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+                {"role": "system", "content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},
+                {"role": "user", "content": "Compose a poem that explains the concept of recursion in programming."}
+        ]
+    )
+    print(completion.choices[0].message)
     pass
 
-if '__main__'==__name__:
+if __name__ == '__main__':
     app.run(host = '0.0.0.0',debug = True)
