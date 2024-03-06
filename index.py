@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,request
 from firebase import firebase
 import os
 from os.path import join, dirname
@@ -11,30 +11,31 @@ FIREBASE_URL = os.environ['FIREBASE_URL']
 firebase = firebase.FirebaseApplication(FIREBASE_URL, None)
 
 
-# @app.route("/auth/<user>",methods = ['GET'])
-# def get_user(user):
-#     # call to firebase to get user
-#     # authenticate the user
-#     # pass true/false inside json
+@app.route("/user/",methods = ['GET'])
+def get_users():
+    # call to firebase to get user
+    response = firebase.get('user/',None)
+    # authenticate the user
+    # pass true/false inside json
+    print(response)
+    return response
+
+@app.route("/user/<int:id>",methods = ['GET','POST'])
+def get_specific_user(id):
+    if response.method == 'POST' and len(dict(request.form))>0:
+        firebase.post('user/',request.form)
+    else:
+        response = firebase.get('user/',None)
+        return response[id]
+
+# @app.route("/<user>/all",methods = ["GET"])
+# def get_all_section_and_task(user):
+#     # call to FireBase to fetch all the sections related to that user
+#     # if present 
+#         # send the json response
+#     # else 
+#         # send empty json
 #     pass
-
-@app.route("/auth-create/<user>",methods = ['POST'])
-def create_user(user):
-    # call to firebase to search for existing user
-    # if present 
-        # return user-exists to json
-    # else
-        # create the user and pass successful to json
-    pass
-
-@app.route("/<user>/all",methods = ["GET"])
-def get_all_section_and_task(user):
-    # call to FireBase to fetch all the sections related to that user
-    # if present 
-        # send the json response
-    # else 
-        # send empty json
-    pass
 
 @app.route("/prompt/")
 def prompt_gpt():
