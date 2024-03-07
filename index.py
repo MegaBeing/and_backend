@@ -1,54 +1,68 @@
-from flask import Flask,request
+# Requirements 
+# -----------------------------------------------------------------------
+from flask import Flask,request,jsonify,redirect
 from firebase import firebase
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 from openai import OpenAI
+
+# initializations
+# -----------------------------------------------------------------------
 app = Flask(__name__)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv()
 FIREBASE_URL = os.environ['FIREBASE_URL']
 firebase = firebase.FirebaseApplication(FIREBASE_URL, None)
 
-
+# Requests
+# -----------------------------------------------------------------------
 @app.route("/user/",methods = ['GET'])
 def get_users():
-    # call to firebase to get user
+    """ 
+    Get all users
+    """
     response = firebase.get('user/',None)
-    # authenticate the user
-    # pass true/false inside json
-    print(response)
     return response
 
-@app.route("/user/<int:id>",methods = ['GET','POST'])
+@app.route("/user/<id>",methods = ['GET'])
 def get_specific_user(id):
-    if response.method == 'POST' and len(dict(request.form))>0:
-        firebase.post('user/',request.form)
-    else:
-        response = firebase.get('user/',None)
-        return response[id]
+    """
+    Get specific user
+    """
+    response = firebase.get('user/<id>',None)
+    return response
 
-# @app.route("/<user>/all",methods = ["GET"])
-# def get_all_section_and_task(user):
-#     # call to FireBase to fetch all the sections related to that user
-#     # if present 
-#         # send the json response
-#     # else 
-#         # send empty json
-#     pass
-
-@app.route("/prompt/")
+@app.route("/prompt/",methods = ['GET','POST'])
 def prompt_gpt():
-    client = OpenAI()
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-                {"role": "system", "content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},
-                {"role": "user", "content": "Compose a poem that explains the concept of recursion in programming."}
-        ]
-    )
-    print(completion.choices[0].message)
-    pass
+    """
+    Generate Prompt
+    """
+    if request.method == 'POST':
+        req = request.form
+        user = data['id']
+        client = OpenAI()
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                    {"role": "system", "content": "You are an to-do list creator which takes the prompt as user requirements for creating the list of tasks which are given priority as low, medium and high and you have to divide it into 4 categories given by the user"},
+                    {"role": "user", "content": req['message']}
+            ]
+        )
+        data = firebase.get(f'/users/{user}',None)
+        count = data['prompt']['count']
+        data['prompt'][count+1]={"generated_value":completion.choices[0].message.content,
+                                    "Prompt":data['message'],
+                                }
+        data['prompt']['count']+=1
+        firebase.patch('user/prompt/',data)
+        return jsonify({"Response":completion.choices[0].message.content})
+    else:
+        user = request.args.getlist('user')
+        # i want to get the prompt list
+        return jsonify({"Message": "Under Development"})
 
+# Server Configs
+# -----------------------------------------------------------------------
 if __name__ == '__main__':
     app.run(host = '0.0.0.0',debug = True)
