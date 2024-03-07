@@ -1,4 +1,0 @@
-name: execute py script # email-from-python.py
-  env: 
-    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    FIREBASE_URL: ${{ secrets.FIREBASE_URL }}
