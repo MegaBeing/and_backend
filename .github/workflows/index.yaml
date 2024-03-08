@@ -17,6 +17,11 @@ jobs:
         with:
           python-version: '3.x' # install the latest python version
 
+      - name: install Flask
+        run: |
+          python -m pip install --upgrade pip
+          pip install Flask
+          
       - name: execute py script # index.py
         env: 
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
